@@ -129,26 +129,22 @@ const CadastroUsuario = () => {
                             setUsuario((prevState) => ({ ...prevState, nome: texto }))
                         }
                     />
-                    <TextInput
-                        style={style.input}
-                        placeholder="Idade"
-                        keyboardType="numeric"
-                        value={usuario.idade}
-                        onChangeText={handleAgeChange}
-                    />
-                    <Picker
-                        selectedValue={usuario.sexo}
-                        onValueChange={(itemValue) =>
-                            setUsuario((prevState) => ({ ...prevState, sexo: itemValue }))
-                        }
-                        style={style.input}
-                    >
-                        <Picker.Item label="Sexo" value="default" />
-                        <Picker.Item label="Masculino" value="M" />
-                        <Picker.Item label="Feminino" value="F" />
-                        <Picker.Item label="Outro" value="O" />
-                        <Picker.Item label="Prefiro não informar" value="N" />
-                    </Picker>
+
+                    <View style={[style.input, { borderRadius: 25, overflow: 'hidden', justifyContent: 'center' }]}>
+                        <Picker
+                            selectedValue={usuario.sexo}
+                            onValueChange={(itemValue) =>
+                                setUsuario((prevState) => ({ ...prevState, sexo: itemValue }))
+                            }
+                            style={{ color: "black", textAlign: 'center', width: '100%' }} // Centralizar o texto
+                        >
+                            <Picker.Item label="Sexo" value="default" />
+                            <Picker.Item label="Masculino" value="M" />
+                            <Picker.Item label="Feminino" value="F" />
+                            <Picker.Item label="Outro" value="O" />
+                            <Picker.Item label="Prefiro não informar" value="N" />
+                        </Picker>
+                    </View>
                     <TextInput
                         style={style.input}
                         placeholder="E-mail"
@@ -178,6 +174,33 @@ const CadastroUsuario = () => {
                             setUsuario((prevState) => ({ ...prevState, telefone: texto }))
                         }
                     />
+
+                    <View style={style.inputData}>
+                        <TextInput
+                            style={style.inputDataText}
+                            value={formattedDate}
+                            editable={true}
+                            placeholder="DD/MM/AAAA"
+                        />
+                        <TouchableOpacity onPress={showDatepicker}>
+                            <Image
+                                source={require("../../img/calendario50.png")}
+                                style={{ width: 30, height: 30 }}
+                            />
+                        </TouchableOpacity>
+                        {show && (
+                            <DateTimePicker
+                                testID="dateTimePicker"
+                                value={date}
+                                mode={mode}
+                                is24Hour={true}
+                                display="default"
+                                onChange={handleDateChange}
+                            />
+                        )}
+                    </View>
+
+                    <Text style={style.textoEndereço}>Endereço</Text>
                     <TextInput
                         style={style.input}
                         placeholder="CEP"
@@ -208,7 +231,10 @@ const CadastroUsuario = () => {
                     />
 
 
-                    <Button title="Registrar" onPress={handleRegister} />
+                    <View style={{ margin: 10 }}>
+                        <Button title="Registrar" onPress={handleRegister} />
+                    </View>
+
                 </View>
             </View>
         </ScrollView>
