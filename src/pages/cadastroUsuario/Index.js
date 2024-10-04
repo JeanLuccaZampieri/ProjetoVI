@@ -9,9 +9,12 @@ import {
     Alert,
     Button
 } from "react-native";
+
+import { Picker } from '@react-native-picker/picker';
+
 import style from "./Style";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { firestore } from "../../firebaseConfig"; // Certifique-se de importar corretamente
+import { firestore } from "../../firebaseConfig";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 
@@ -30,6 +33,8 @@ const CadastroUsuario = () => {
         rua: "",
         numero: "",
         bairro: "",
+        idade: "",
+        sexo: "",
         tipo: 1,
         aceitouTermos: false,
     });
@@ -61,11 +66,19 @@ const CadastroUsuario = () => {
         }
     };
 
+    // Restrict age input to numbers and max 3 digits
+    const handleAgeChange = (texto) => {
+        const numericAge = texto.replace(/[^0-9]/g, ''); // Remove non-numeric characters
+        if (numericAge.length <= 3) {
+            setUsuario((prevState) => ({ ...prevState, idade: numericAge }));
+        }
+    };
+
     const handleRegister = async () => {
         const auth = getAuth();
-        const { email, senha, nome, cpf, telefone, cep, rua, numero, bairro } = usuario;
+        const { email, senha, nome, cpf, telefone, cep, rua, numero, bairro, idade, sexo } = usuario;
 
-        if (!email || !senha || !nome || !cpf || !telefone || !cep || !rua || !numero || !bairro) {
+        if (!email || !senha || !nome || !cpf || !telefone || !cep || !rua || !numero || !bairro || !idade || !sexo) {
             Alert.alert("Erro", "Por favor, preencha todos os campos.");
             return;
         }
@@ -82,6 +95,8 @@ const CadastroUsuario = () => {
                 dataNascimento: formattedDate,
                 cpf,
                 telefone,
+                idade,
+                sexo,
                 endereco: {
                     cep,
                     rua,
@@ -116,6 +131,26 @@ const CadastroUsuario = () => {
                     />
                     <TextInput
                         style={style.input}
+                        placeholder="Idade"
+                        keyboardType="numeric"
+                        value={usuario.idade}
+                        onChangeText={handleAgeChange}
+                    />
+                    <Picker
+                        selectedValue={usuario.sexo}
+                        onValueChange={(itemValue) =>
+                            setUsuario((prevState) => ({ ...prevState, sexo: itemValue }))
+                        }
+                        style={style.input}
+                    >
+                        <Picker.Item label="Sexo" value="default" />
+                        <Picker.Item label="Masculino" value="M" />
+                        <Picker.Item label="Feminino" value="F" />
+                        <Picker.Item label="Outro" value="O" />
+                        <Picker.Item label="Prefiro não informar" value="N" />
+                    </Picker>
+                    <TextInput
+                        style={style.input}
                         placeholder="E-mail"
                         onChangeText={(texto) =>
                             setUsuario((prevState) => ({ ...prevState, email: texto }))
@@ -129,10 +164,51 @@ const CadastroUsuario = () => {
                             setUsuario((prevState) => ({ ...prevState, senha: texto }))
                         }
                     />
-                    {/* Outras entradas de usuário */}
+                    <TextInput
+                        style={style.input}
+                        placeholder="CPF"
+                        onChangeText={(texto) =>
+                            setUsuario((prevState) => ({ ...prevState, cpf: texto }))
+                        }
+                    />
+                    <TextInput
+                        style={style.input}
+                        placeholder="Telefone"
+                        onChangeText={(texto) =>
+                            setUsuario((prevState) => ({ ...prevState, telefone: texto }))
+                        }
+                    />
+                    <TextInput
+                        style={style.input}
+                        placeholder="CEP"
+                        onChangeText={(texto) =>
+                            setUsuario((prevState) => ({ ...prevState, cep: texto }))
+                        }
+                    />
+                    <TextInput
+                        style={style.input}
+                        placeholder="Rua"
+                        onChangeText={(texto) =>
+                            setUsuario((prevState) => ({ ...prevState, rua: texto }))
+                        }
+                    />
+                    <TextInput
+                        style={style.input}
+                        placeholder="Número"
+                        onChangeText={(texto) =>
+                            setUsuario((prevState) => ({ ...prevState, numero: texto }))
+                        }
+                    />
+                    <TextInput
+                        style={style.input}
+                        placeholder="Bairro"
+                        onChangeText={(texto) =>
+                            setUsuario((prevState) => ({ ...prevState, bairro: texto }))
+                        }
+                    />
+
 
                     <Button title="Registrar" onPress={handleRegister} />
-
                 </View>
             </View>
         </ScrollView>
