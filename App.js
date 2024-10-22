@@ -1,16 +1,9 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import './src/firebaseConfig';
-
-import ForgotPasswordScreen from './src/pages/esqueciSenha/EsqueciSenha';
-import SignUpScreen from './src/pages/cadastroUsuario/CadastroUsuario';
-import HomeScreen from './src/pages/home/home';
-import AgendaScreen from './src/pages/agenda/agenda';
-import SearchScreen from './src/pages/pesquisa/pesquisa';
-import LoginScreen from './src/pages/login/login';
-import MyEventsScreen from './src/pages/meusEventos/MeusEventos';
-
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, Text, View, Image } from "react-native";
+import { useState, useEffect } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import CadastroUsuario from "./src/pages/cadastro/Index";
 const Stack = createStackNavigator();
 
 export default function App() {
