@@ -10,6 +10,7 @@ import AgendaScreen from './src/pages/agenda/agenda';
 import SearchScreen from './src/pages/pesquisa/pesquisa';
 import MyEventsScreen from './src/pages/meusEventos/MeusEventos';
 import ForgotPasswordScreen from './src/pages/esqueciSenha/EsqueciSenha';
+import CreateEventScreen from './src/pages/cadastrarEvento/CadastrarEvento';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
         <Stack.Screen name="Agenda" component={AgendaScreen} />
         <Stack.Screen name="Pesquisar" component={SearchScreen} />
         <Stack.Screen name="MeusEventos" component={MyEventsScreen} />
+        <Stack.Screen name="CadastrarEvento" component={CreateEventScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

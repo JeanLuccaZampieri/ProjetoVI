@@ -2,8 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Footer from '../../componentes/footer';
+import { useNavigation } from '@react-navigation/native';
 
 export default function HomeScreen() {
+  const navigation = useNavigation();
   const upcomingEvents = [
     { id: 1, title: 'Conferência de Tech', date: '10 Jun' },
     { id: 2, title: 'Workshop de Design', date: '15 Jun' },
@@ -41,7 +43,7 @@ export default function HomeScreen() {
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Ações Rápidas</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.quickActionButton}>
+            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigation.navigate('CadastrarEvento')}>
               <Icon name="add-circle-outline" size={24} color="#007AFF" />
               <Text style={styles.quickActionText}>Criar Evento</Text>
             </TouchableOpacity>
