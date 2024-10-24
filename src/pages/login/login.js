@@ -1,24 +1,35 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { auth } from '../../firebaseConfig';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
-export default function LoginScreen() {
+const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const navigation = useNavigation();
 
-  const handleLogin = () => {
-    // Aqui você normalmente faria a autenticação
-    // Como não precisamos de autenticação real, vamos apenas navegar para a Home
-    navigation.navigate('Home');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setErrorMessage('Por favor, preencha todos os campos');
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigation.navigate('Home');
+    } catch (error) {
+      setErrorMessage('Sua senha e/ou email está incorreto');
+    }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         <Image
-          source={{ uri: 'https://placeholder.com/wp-content/uploads/2018/10/placeholder.com-logo1.png' }}
+          source={require("../../images/logo/logo.png")}
           style={styles.logo}
         />
         <Text style={styles.logoText}>Eventive</Text>
@@ -30,7 +41,10 @@ export default function LoginScreen() {
           style={styles.input}
           placeholder="Email"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            setEmail(text);
+            setErrorMessage('');
+          }}
           keyboardType="email-address"
           autoCapitalize="none"
         />
@@ -42,16 +56,21 @@ export default function LoginScreen() {
           style={styles.input}
           placeholder="Senha"
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(text) => {
+            setPassword(text);
+            setErrorMessage('');
+          }}
           secureTextEntry
         />
       </View>
+      
+      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
       
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>Entrar</Text>
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.forgotPassword} onPress={() => navigation.navigate('ForgotPassword')}>
+      <TouchableOpacity style={styles.forgotPassword} onPress={() => navigation.navigate('EsqueciSenha')}>
         <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
       </TouchableOpacity>
       
@@ -63,7 +82,7 @@ export default function LoginScreen() {
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -104,6 +123,11 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 50,
   },
+  errorMessage: {
+    color: 'red',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   loginButton: {
     backgroundColor: '#007AFF',
     padding: 15,
@@ -135,3 +159,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+export default LoginScreen;

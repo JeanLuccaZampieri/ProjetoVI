@@ -1,16 +1,32 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { auth } from '../../firebaseConfig';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
-export default function ForgotPasswordScreen() {
+const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
   const navigation = useNavigation();
 
-  const handleResetPassword = () => {
-    // Aqui você implementaria a lógica para enviar o e-mail de redefinição de senha
-    alert('Um e-mail de redefinição de senha foi enviado para ' + email);
-    navigation.goBack();
+  const handleResetPassword = async () => {
+    if (!email) {
+      setMessage('Por favor, insira seu email');
+      setIsError(true);
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setMessage('Email de redefinição de senha enviado. Verifique sua caixa de entrada.');
+      setIsError(false);
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      setMessage('Erro ao enviar email de redefinição. Verifique se o email está correto.');
+      setIsError(true);
+    }
   };
 
   return (
@@ -18,7 +34,7 @@ export default function ForgotPasswordScreen() {
       <Icon name="lock-open-outline" size={80} color="#007AFF" style={styles.icon} />
       <Text style={styles.title}>Esqueceu sua senha?</Text>
       <Text style={styles.subtitle}>
-        Digite seu e-mail e enviaremos instruções para redefinir sua senha.
+        Digite seu email e enviaremos instruções para redefinir sua senha.
       </Text>
       
       <View style={styles.inputContainer}>
@@ -27,11 +43,20 @@ export default function ForgotPasswordScreen() {
           style={styles.input}
           placeholder="Email"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            setEmail(text);
+            setMessage('');
+          }}
           keyboardType="email-address"
           autoCapitalize="none"
         />
       </View>
+      
+      {message ? (
+        <Text style={[styles.message, isError ? styles.errorMessage : styles.successMessage]}>
+          {message}
+        </Text>
+      ) : null}
       
       <TouchableOpacity style={styles.resetButton} onPress={handleResetPassword}>
         <Text style={styles.resetButtonText}>Enviar instruções</Text>
@@ -42,7 +67,7 @@ export default function ForgotPasswordScreen() {
       </TouchableOpacity>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -83,6 +108,16 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 50,
   },
+  message: {
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    color: 'red',
+  },
+  successMessage: {
+    color: 'green',
+  },
   resetButton: {
     backgroundColor: '#007AFF',
     padding: 15,
@@ -103,3 +138,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+export default ForgotPasswordScreen;
