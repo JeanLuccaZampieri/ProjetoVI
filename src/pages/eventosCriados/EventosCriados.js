@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { firestore, auth } from '../../firebaseConfig';
@@ -7,6 +7,7 @@ import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/fire
 
 const MyEventsScreen = () => {
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -14,6 +15,7 @@ const MyEventsScreen = () => {
   }, []);
 
   const fetchEvents = async () => {
+    setLoading(true);
     try {
       const eventsRef = collection(firestore, 'events');
       const q = query(eventsRef, where('createdBy', '==', auth.currentUser.uid));
@@ -26,6 +28,8 @@ const MyEventsScreen = () => {
     } catch (error) {
       console.error('Error fetching events:', error);
       Alert.alert('Erro', 'Não foi possível carregar os eventos.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,6 +68,15 @@ const MyEventsScreen = () => {
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Carregando eventos...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Meus Eventos</Text>
@@ -89,6 +102,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
     padding: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
   },
   title: {
     fontSize: 24,
