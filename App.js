@@ -11,6 +11,8 @@ import SearchScreen from './src/pages/pesquisa/pesquisa';
 import MyEventsScreen from './src/pages/meusEventos/MeusEventos';
 import ForgotPasswordScreen from './src/pages/esqueciSenha/EsqueciSenha';
 import CreateEventScreen from './src/pages/cadastrarEvento/CadastrarEvento';
+import EventosCriados from './src/pages/eventosCriados/EventosCriados'
+import EditEventScreen from './src/pages/editarEventos/EditarEventos';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -30,6 +32,8 @@ export default function App() {
         <Stack.Screen name="Pesquisar" component={SearchScreen} />
         <Stack.Screen name="MeusEventos" component={MyEventsScreen} />
         <Stack.Screen name="CadastrarEvento" component={CreateEventScreen} />
+        <Stack.Screen name="EventosCriados" component={EventosCriados} />
+        <Stack.Screen name="EditarEventos" component={EditEventScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
