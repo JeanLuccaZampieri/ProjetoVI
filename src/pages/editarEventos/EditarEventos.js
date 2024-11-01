@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { firestore, auth } from '../../firebaseConfig';
 import { doc, getDoc, updateDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const EditEventScreen = () => {
   const [eventName, setEventName] = useState('');
@@ -14,6 +15,8 @@ const EditEventScreen = () => {
   const [guests, setGuests] = useState([]);
   const [selectedGuests, setSelectedGuests] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const navigation = useNavigation();
   const route = useRoute();
@@ -36,6 +39,7 @@ const EditEventScreen = () => {
         setItems(eventData.items.join(', '));
         setIsPrivate(eventData.isPrivate);
         setSelectedGuests(eventData.guests || []);
+        setDate(eventData.eventDate ? eventData.eventDate.toDate() : new Date());
       } else {
         Alert.alert('Erro', 'Evento não encontrado');
         navigation.goBack();
@@ -63,7 +67,7 @@ const EditEventScreen = () => {
   };
 
   const handleUpdateEvent = async () => {
-    if (!eventName || !description || !budget) {
+    if (!eventName || !description || !budget || !date) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios.');
       return;
     }
@@ -77,6 +81,7 @@ const EditEventScreen = () => {
         items: items.split(',').map(item => item.trim()),
         isPrivate,
         guests: selectedGuests,
+        eventDate: date,
         updatedAt: new Date()
       });
       Alert.alert('Sucesso', 'Evento atualizado com sucesso!');
@@ -99,6 +104,12 @@ const EditEventScreen = () => {
     guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     guest.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setShowDatePicker(false);
+    setDate(currentDate);
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -135,6 +146,22 @@ const EditEventScreen = () => {
           keyboardType="numeric"
         />
       </View>
+
+      <TouchableOpacity style={styles.datePickerButton} onPress={() => setShowDatePicker(true)}>
+        <Icon name="calendar" size={24} color="#666" style={styles.inputIcon} />
+        <Text style={styles.datePickerButtonText}>
+          {date.toLocaleDateString()}
+        </Text>
+      </TouchableOpacity>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={onDateChange}
+        />
+      )}
 
       <View style={styles.inputContainer}>
         <Icon name="list-outline" size={24} color="#666" style={styles.inputIcon} />
@@ -219,6 +246,19 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 50,
+  },
+  datePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 5,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 15,
+  },
+  datePickerButtonText: {
+    fontSize: 16,
+    color: '#333',
   },
   switchContainer: {
     flexDirection: 'row',

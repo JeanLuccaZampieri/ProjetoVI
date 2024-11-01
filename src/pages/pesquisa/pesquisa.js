@@ -1,23 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Footer from '../../componentes/footer';
+import { firestore } from '../../firebaseConfig';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [events, setEvents] = useState([]);
 
-  const events = [
-    { id: 1, title: 'Conferência de Tech', date: '20 Jun', category: 'Tecnologia' },
-    { id: 2, title: 'Workshop de Design', date: '15 Jun', category: 'Design' },
-    { id: 3, title: 'Meetup de Startups', date: '25 Jun', category: 'Negócios' },
-    { id: 4, title: 'Feira de Empregos', date: '30 Jun', category: 'Carreira' },
-    { id: 5, title: 'Festival de Música', date: '5 Jul', category: 'Entretenimento' },
-  ];
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
-  const filteredEvents = events.filter(event =>
-    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    event.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const fetchEvents = async () => {
+    try {
+      const eventsRef = collection(firestore, 'events');
+      const q = query(
+        eventsRef,
+        where('isActive', '==', true)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const fetchedEvents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setEvents(fetchedEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
+  const filteredEvents = events.filter(event => {
+    const lowercaseQuery = searchQuery.toLowerCase();
+    return (
+      (event.name && event.name.toLowerCase().includes(lowercaseQuery)) ||
+      (event.category && event.category.toLowerCase().includes(lowercaseQuery))
+    );
+  });
 
   return (
     <View style={styles.container}>
@@ -39,11 +60,11 @@ export default function SearchScreen() {
         {filteredEvents.map((event) => (
           <TouchableOpacity key={event.id} style={styles.eventCard}>
             <View style={styles.eventInfo}>
-              <Text style={styles.eventTitle}>{event.title}</Text>
-              <Text style={styles.eventDate}>{event.date}</Text>
+              <Text style={styles.eventTitle}>{event.name || 'Evento sem nome'}</Text>
+              <Text style={styles.eventDate}>{event.date || 'Data não especificada'}</Text>
             </View>
             <View style={styles.eventCategory}>
-              <Text style={styles.eventCategoryText}>{event.category}</Text>
+              <Text style={styles.eventCategoryText}>{event.category || 'Sem categoria'}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -85,7 +106,6 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderWidth: 1,
     borderRadius: 20,
-    
     paddingHorizontal: 16,
   },
   content: {
