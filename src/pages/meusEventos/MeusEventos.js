@@ -1,15 +1,56 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Footer from '../../componentes/footer';
+import { firestore, auth } from '../../firebaseConfig';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
 
 export default function MyEventsScreen() {
-  const myEvents = [
-    { id: 1, title: 'Conferência de Tech', date: '20 Jun', role: 'Participante' },
-    { id: 2, title: 'Workshop de Design', date: '15 Jun', role: 'Organizador' },
-    { id: 3, title: 'Meetup de Startups', date: '25 Jun', role: 'Palestrante' },
-    { id: 4, title: 'Hackathon de IA', date: '10 Jul', role: 'Participante' },
-  ];
+  const [myEvents, setMyEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    fetchMyEvents();
+  }, []);
+
+  const fetchMyEvents = async () => {
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.error('No user logged in');
+        return;
+      }
+
+      const eventsRef = collection(firestore, 'events');
+      const q = query(eventsRef, where('guests', 'array-contains', currentUser.uid));
+      const querySnapshot = await getDocs(q);
+
+      const fetchedEvents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setMyEvents(fetchedEvents);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      setLoading(false);
+    }
+  };
+
+  const navigateToEventDetails = (eventId) => {
+    navigation.navigate('EventDetails', { eventId });
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -21,21 +62,36 @@ export default function MyEventsScreen() {
       </View>
 
       <ScrollView style={styles.content}>
-        {myEvents.map((event) => (
-          <TouchableOpacity key={event.id} style={styles.eventCard}>
-            <View style={styles.eventInfo}>
-              <Text style={styles.eventTitle}>{event.title}</Text>
-              <Text style={styles.eventDate}>{event.date}</Text>
-            </View>
-            <View style={styles.eventRole}>
-              <Text style={styles.eventRoleText}>{event.role}</Text>
-            </View>
-            <Icon name="chevron-forward-outline" size={20} color="#666" />
-          </TouchableOpacity>
-        ))}
+        {myEvents.length > 0 ? (
+          myEvents.map((event) => (
+            <TouchableOpacity 
+              key={event.id} 
+              style={styles.eventCard}
+              onPress={() => navigateToEventDetails(event.id)}
+            >
+              <View style={styles.eventInfo}>
+                <Text style={styles.eventTitle}>{event.name}</Text>
+                <Text style={styles.eventDate}>
+                  {event.eventDate ? new Date(event.eventDate.toDate()).toLocaleDateString() : 'Data não especificada'}
+                </Text>
+              </View>
+              <View style={styles.eventRole}>
+                <Text style={styles.eventRoleText}>
+                  {event.attendees && event.attendees.includes(auth.currentUser.uid) ? 'Confirmado' : 'Convidado'}
+                </Text>
+              </View>
+              <Icon name="chevron-forward-outline" size={20} color="#666" />
+            </TouchableOpacity>
+          ))
+        ) : (
+          <Text style={styles.noEventsText}>Você não tem eventos como convidado.</Text>
+        )}
       </ScrollView>
 
-      <TouchableOpacity style={styles.addButton}>
+      <TouchableOpacity 
+        style={styles.addButton}
+        onPress={() => navigation.navigate('CreateEvent')}
+      >
         <Icon name="add" size={24} color="#FFF" />
       </TouchableOpacity>
 
@@ -47,6 +103,12 @@ export default function MyEventsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#F5F5F5',
   },
   header: {
@@ -120,5 +182,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  noEventsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
