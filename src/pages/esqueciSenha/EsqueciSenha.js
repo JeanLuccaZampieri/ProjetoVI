@@ -22,6 +22,10 @@ const ForgotPasswordScreen = () => {
       await sendPasswordResetEmail(auth, email);
       setMessage('Email de redefinição de senha enviado. Verifique sua caixa de entrada.');
       setIsError(false);
+
+      // Limpa o campo de email e navega para a tela de login
+      setEmail('');
+      setTimeout(() => navigation.navigate('Login'), 2000);
     } catch (error) {
       console.error('Error sending password reset email:', error);
       setMessage('Erro ao enviar email de redefinição. Verifique se o email está correto.');
@@ -36,7 +40,7 @@ const ForgotPasswordScreen = () => {
       <Text style={styles.subtitle}>
         Digite seu email e enviaremos instruções para redefinir sua senha.
       </Text>
-      
+
       <View style={styles.inputContainer}>
         <Icon name="mail-outline" size={24} color="#666" style={styles.inputIcon} />
         <TextInput
@@ -51,17 +55,17 @@ const ForgotPasswordScreen = () => {
           autoCapitalize="none"
         />
       </View>
-      
+
       {message ? (
         <Text style={[styles.message, isError ? styles.errorMessage : styles.successMessage]}>
           {message}
         </Text>
       ) : null}
-      
+
       <TouchableOpacity style={styles.resetButton} onPress={handleResetPassword}>
         <Text style={styles.resetButtonText}>Enviar instruções</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Text style={styles.backButtonText}>Voltar para o login</Text>
       </TouchableOpacity>
