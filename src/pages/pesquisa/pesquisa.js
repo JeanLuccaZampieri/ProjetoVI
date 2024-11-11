@@ -4,8 +4,9 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Footer from '../../componentes/footer';
 import { firestore } from '../../firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-
+import { useNavigation } from '@react-navigation/native';
 export default function SearchScreen() {
+  const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [events, setEvents] = useState([]);
 
@@ -58,10 +59,14 @@ export default function SearchScreen() {
 
       <ScrollView style={styles.content}>
         {filteredEvents.map((event) => (
-          <TouchableOpacity key={event.id} style={styles.eventCard}>
+          <TouchableOpacity key={event.id} style={styles.eventCard} onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}>
             <View style={styles.eventInfo}>
               <Text style={styles.eventTitle}>{event.name || 'Evento sem nome'}</Text>
-              <Text style={styles.eventDate}>{event.date || 'Data não especificada'}</Text>
+              <Text style={styles.eventDate}>
+                {event.eventDate && event.eventDate.toDate
+                  ? new Date(event.eventDate.toDate()).toLocaleDateString()
+                  : 'Data não especificada'}
+              </Text>
             </View>
             <View style={styles.eventCategory}>
               <Text style={styles.eventCategoryText}>{event.category || 'Sem categoria'}</Text>

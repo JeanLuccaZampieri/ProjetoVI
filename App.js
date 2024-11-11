@@ -13,6 +13,7 @@ import ForgotPasswordScreen from './src/pages/esqueciSenha/EsqueciSenha';
 import CreateEventScreen from './src/pages/cadastrarEvento/CadastrarEvento';
 import EventosCriados from './src/pages/eventosCriados/EventosCriados'
 import EditEventScreen from './src/pages/editarEventos/EditarEventos';
+import EventDetailsScreen from './src/pages/detalhesEvento/detalhesEvento';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
         <Stack.Screen name="CadastrarEvento" component={CreateEventScreen} />
         <Stack.Screen name="EventosCriados" component={EventosCriados} />
         <Stack.Screen name="EditarEventos" component={EditEventScreen} />
+        <Stack.Screen name="EventDetails" component={EventDetailsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
