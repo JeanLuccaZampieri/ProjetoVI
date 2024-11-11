@@ -1,16 +1,74 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Footer from '../../componentes/footer';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { firestore, auth } from '../../firebaseConfig';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
-  const upcomingEvents = [
-    { id: 1, title: 'Conferência de Tech', date: '10 Jun' },
-    { id: 2, title: 'Workshop de Design', date: '15 Jun' },
-    { id: 3, title: 'Meetup de Startups', date: '20 Jun' },
-  ];
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState('Usuário');
+
+  const fetchUpcomingEvents = useCallback(async () => {
+    setLoading(true);
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.error('No user logged in');
+        setLoading(false);
+        return;
+      }
+
+      const eventsRef = collection(firestore, 'events');
+      const now = new Date();
+      const q = query(
+        eventsRef,
+        where('attendees', 'array-contains', currentUser.uid),
+        where('eventDate', '>=', now),
+        limit(3)
+      );
+
+      const querySnapshot = await getDocs(q);
+      const fetchedEvents = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          eventDate: data.eventDate ? data.eventDate.toDate() : null
+        };
+      });
+
+      setUpcomingEvents(fetchedEvents);
+
+      // Fetch user name
+      const userQuery = query(collection(firestore, 'users'), where('uid', '==', currentUser.uid));
+      const userSnapshot = await getDocs(userQuery);
+      if (!userSnapshot.empty) {
+        setUserName(userSnapshot.docs[0].data().name || 'Usuário');
+      }
+    } catch (error) {
+      console.error('Error fetching upcoming events:', error);
+      if (error.code === 'failed-precondition') {
+        console.error('This query requires an index. Please create it in the Firebase Console.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUpcomingEvents();
+    }, [fetchUpcomingEvents])
+  );
+
+  const formatEventDate = (date) => {
+    if (!date) return 'Data não definida';
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  };
 
   return (
     <View style={styles.container}>
@@ -23,31 +81,41 @@ export default function HomeScreen() {
 
       <ScrollView style={styles.content}>
         <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeText}>Bem-vindo de volta, Usuário!</Text>
+          <Text style={styles.welcomeText}>Bem-vindo de volta, {userName}!</Text>
           <Text style={styles.subText}>Vamos gerenciar seus eventos</Text>
         </View>
 
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Próximos Eventos</Text>
-          {upcomingEvents.map((event) => (
-            <TouchableOpacity key={event.id} style={styles.eventCard}>
-              <View style={styles.eventDate}>
-                <Text style={styles.eventDateText}>{event.date}</Text>
-              </View>
-              <Text style={styles.eventTitle}>{event.title}</Text>
-              <Icon name="chevron-forward-outline" size={20} color="#666" />
-            </TouchableOpacity>
-          ))}
+          {loading ? (
+            <ActivityIndicator size="large" color="#007AFF" />
+          ) : upcomingEvents.length > 0 ? (
+            upcomingEvents.map((event) => (
+              <TouchableOpacity 
+                key={event.id} 
+                style={styles.eventCard}
+                onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
+              >
+                <View style={styles.eventDate}>
+                  <Text style={styles.eventDateText}>{formatEventDate(event.eventDate)}</Text>
+                </View>
+                <Text style={styles.eventTitle}>{event.name}</Text>
+                <Icon name="chevron-forward-outline" size={20} color="#666" />
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={styles.noEventsText}>Nenhum evento confirmado próximo.</Text>
+          )}
         </View>
 
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Ações Rápidas</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigation.navigate('EventosCriados')}>
+            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigation.navigate('CreateEvent')}>
               <Icon name="add-circle-outline" size={24} color="#007AFF" />
               <Text style={styles.quickActionText}>Criar Evento</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionButton}>
+            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigation.navigate('Search')}>
               <Icon name="search-outline" size={24} color="#007AFF" />
               <Text style={styles.quickActionText}>Buscar Eventos</Text>
             </TouchableOpacity>
@@ -128,6 +196,8 @@ const styles = StyleSheet.create({
   eventDateText: {
     color: '#FFF',
     fontWeight: 'bold',
+    fontSize: 12,
+    textAlign: 'center',
   },
   eventTitle: {
     flex: 1,
@@ -144,5 +214,11 @@ const styles = StyleSheet.create({
   quickActionText: {
     marginTop: 8,
     color: '#007AFF',
+  },
+  noEventsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });

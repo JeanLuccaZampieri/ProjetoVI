@@ -1,25 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Footer from '../../componentes/footer';
 import { firestore, auth } from '../../firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 export default function MyEventsScreen() {
   const [myEvents, setMyEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    fetchMyEvents();
-  }, []);
-
-  const fetchMyEvents = async () => {
+  const fetchMyEvents = useCallback(async () => {
+    setLoading(true);
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) {
         console.error('No user logged in');
+        setLoading(false);
         return;
       }
 
@@ -33,12 +31,18 @@ export default function MyEventsScreen() {
       }));
 
       setMyEvents(fetchedEvents);
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching events:', error);
+    } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchMyEvents();
+    }, [])
+  );
 
   const navigateToEventDetails = (eventId) => {
     navigation.navigate('EventDetails', { eventId });
