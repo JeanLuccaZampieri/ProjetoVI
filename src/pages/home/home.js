@@ -111,7 +111,7 @@ export default function HomeScreen() {
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Ações Rápidas</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigation.navigate('CreateEvent')}>
+            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigation.navigate('CadastrarEvento')}>
               <Icon name="add-circle-outline" size={24} color="#007AFF" />
               <Text style={styles.quickActionText}>Criar Evento</Text>
             </TouchableOpacity>
