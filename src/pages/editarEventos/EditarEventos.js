@@ -9,6 +9,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 const EditEventScreen = () => {
   const [eventName, setEventName] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState(''); // Added category state
   const [budget, setBudget] = useState('');
   const [items, setItems] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
@@ -17,6 +18,7 @@ const EditEventScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [entryFee, setEntryFee] = useState(''); // Added entryFee state
 
   const navigation = useNavigation();
   const route = useRoute();
@@ -35,11 +37,13 @@ const EditEventScreen = () => {
         const eventData = eventDoc.data();
         setEventName(eventData.name);
         setDescription(eventData.description);
+        setCategory(eventData.category || ''); // Set category
         setBudget(eventData.budget.toString());
         setItems(eventData.items.join(', '));
         setIsPrivate(eventData.isPrivate);
         setSelectedGuests(eventData.guests || []);
         setDate(eventData.eventDate ? eventData.eventDate.toDate() : new Date());
+        setEntryFee(eventData.entryFee ? eventData.entryFee.toString() : ''); // Set entryFee
       } else {
         Alert.alert('Erro', 'Evento não encontrado');
         navigation.goBack();
@@ -67,8 +71,8 @@ const EditEventScreen = () => {
   };
 
   const handleUpdateEvent = async () => {
-    if (!eventName || !description || !budget || !date) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios.');
+    if (!eventName || !description || !budget || !date || !category) { // Added category validation
+      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios, incluindo a categoria.');
       return;
     }
 
@@ -77,7 +81,9 @@ const EditEventScreen = () => {
       await updateDoc(eventRef, {
         name: eventName,
         description,
+        category, // Added category to update
         budget: parseFloat(budget),
+        entryFee: entryFee ? parseFloat(entryFee) : null, // Added entryFee
         items: items.split(',').map(item => item.trim()),
         isPrivate,
         guests: selectedGuests,
@@ -126,6 +132,16 @@ const EditEventScreen = () => {
       </View>
 
       <View style={styles.inputContainer}>
+        <Icon name="pricetag-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Categoria do evento"
+          value={category}
+          onChangeText={setCategory}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
         <Icon name="document-text-outline" size={24} color="#666" style={styles.inputIcon} />
         <TextInput
           style={styles.input}
@@ -143,6 +159,17 @@ const EditEventScreen = () => {
           placeholder="Orçamento"
           value={budget}
           onChangeText={setBudget}
+          keyboardType="numeric"
+        />
+      </View>
+
+      <View style={styles.inputContainer}> a
+        <Icon name="ticket-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Valor da entrada (opcional)"
+          value={entryFee}
+          onChangeText={setEntryFee}
           keyboardType="numeric"
         />
       </View>

@@ -76,7 +76,7 @@ export default function MyEventsScreen() {
               <View style={styles.eventInfo}>
                 <Text style={styles.eventTitle}>{event.name}</Text>
                 <Text style={styles.eventDate}>
-                  {event.eventDate ? new Date(event.eventDate.toDate()).toLocaleDateString() : 'Data não especificada'}
+                  {event.eventDate ? new Date(event.eventDate.toDate()).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'}) : 'Data não especificada'}
                 </Text>
               </View>
               <View style={styles.eventRole}>

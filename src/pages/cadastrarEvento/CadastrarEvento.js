@@ -17,6 +17,8 @@ const CreateEventScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [category, setCategory] = useState(''); // Added category state
+  const [entryFee, setEntryFee] = useState(''); // Added entryFee state
 
   const navigation = useNavigation();
 
@@ -41,8 +43,8 @@ const CreateEventScreen = () => {
   };
 
   const handleCreateEvent = async () => {
-    if (!eventName || !description || !budget || !date) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios.');
+    if (!eventName || !description || !budget || !date || !category) { // Added category validation
+      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios, incluindo a categoria.');
       return;
     }
 
@@ -50,7 +52,9 @@ const CreateEventScreen = () => {
       const eventData = {
         name: eventName,
         description,
+        category, // Added category to eventData
         budget: parseFloat(budget),
+        entryFee: entryFee ? parseFloat(entryFee) : null, // Added entryFee to eventData
         items: items.split(',').map(item => item.trim()),
         isPrivate,
         guests: selectedGuests,
@@ -103,6 +107,16 @@ const CreateEventScreen = () => {
       </View>
 
       <View style={styles.inputContainer}>
+        <Icon name="pricetag-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Categoria do evento"
+          value={category}
+          onChangeText={setCategory}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
         <Icon name="document-text-outline" size={24} color="#666" style={styles.inputIcon} />
         <TextInput
           style={styles.input}
@@ -120,6 +134,17 @@ const CreateEventScreen = () => {
           placeholder="Orçamento"
           value={budget}
           onChangeText={setBudget}
+          keyboardType="numeric"
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Icon name="ticket-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Valor da entrada (opcional)"
+          value={entryFee}
+          onChangeText={setEntryFee}
           keyboardType="numeric"
         />
       </View>

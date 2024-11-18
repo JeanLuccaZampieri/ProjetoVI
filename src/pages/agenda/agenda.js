@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { Agenda } from 'react-native-calendars';
 import Footer from '../../componentes/footer';
 import { firestore, auth } from '../../firebaseConfig';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 export default function AgendaScreen() {
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState({});
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
@@ -25,19 +26,28 @@ export default function AgendaScreen() {
       const q = query(eventsRef, where('attendees', 'array-contains', currentUser.uid));
       const querySnapshot = await getDocs(q);
 
-      const fetchedEvents = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const fetchedEvents = {};
+      const now = new Date();
 
-      // Sort events by date, handling potential undefined dates
-      const sortedEvents = fetchedEvents.sort((a, b) => {
-        if (!a.eventDate || !a.eventDate.toDate) return 1;
-        if (!b.eventDate || !b.eventDate.toDate) return -1;
-        return a.eventDate.toDate() - b.eventDate.toDate();
+      querySnapshot.docs.forEach(doc => {
+        const eventData = doc.data();
+        if (eventData.eventDate && eventData.eventDate.toDate) {
+          const date = eventData.eventDate.toDate().toISOString().split('T')[0];
+          if (!fetchedEvents[date]) {
+            fetchedEvents[date] = [];
+          }
+          fetchedEvents[date].push({
+            id: doc.id,
+            name: eventData.name || 'Evento sem nome',
+            time: eventData.eventDate.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            date: date,
+            isPast: eventData.eventDate.toDate() < now,
+            rating: eventData.rating || 0
+          });
+        }
       });
 
-      setEvents(sortedEvents);
+      setEvents(fetchedEvents);
     } catch (error) {
       console.error('Error fetching confirmed events:', error);
     } finally {
@@ -48,23 +58,59 @@ export default function AgendaScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchConfirmedEvents();
-    }, [])
+    }, [fetchConfirmedEvents])
   );
 
   const navigateToEventDetails = (eventId) => {
     navigation.navigate('EventDetails', { eventId });
   };
 
-  const formatEventDate = (date) => {
-    if (!date || !date.toDate) return 'Data não definida';
-    const eventDate = date.toDate();
-    return eventDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  const handleRating = async (eventId, rating) => {
+    try {
+      const eventRef = doc(firestore, 'events', eventId);
+      await updateDoc(eventRef, { rating });
+      Alert.alert('Sucesso', 'Avaliação salva com sucesso!');
+      fetchConfirmedEvents(); // Recarrega os eventos para atualizar a avaliação
+    } catch (error) {
+      console.error('Error saving rating:', error);
+      Alert.alert('Erro', 'Não foi possível salvar a avaliação. Tente novamente.');
+    }
   };
 
-  const formatEventTime = (date) => {
-    if (!date || !date.toDate) return 'Hora não definida';
-    const eventDate = date.toDate();
-    return eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const renderItem = (item) => {
+    const eventDate = new Date(item.date);
+    const day = eventDate.getDate();
+
+    return (
+      <TouchableOpacity
+        style={styles.eventItem}
+        onPress={() => navigateToEventDetails(item.id)}
+      >
+        <View style={styles.eventDay}>
+          <Text style={styles.eventDayText}>{day}</Text>
+        </View>
+        <View style={styles.eventContent}>
+          <Text style={styles.eventTitle}>{item.name}</Text>
+          <Text style={styles.eventTime}>{item.time}</Text>
+          {item.isPast && (
+            <View style={styles.ratingContainer}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => handleRating(item.id, star)}
+                >
+                  <Icon
+                    name={star <= item.rating ? 'star' : 'star-outline'}
+                    size={20}
+                    color="#FFD700"
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   if (loading) {
@@ -84,28 +130,22 @@ export default function AgendaScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
-        {events.length > 0 ? (
-          events.map((event) => (
-            <TouchableOpacity 
-              key={event.id} 
-              style={styles.eventCard}
-              onPress={() => navigateToEventDetails(event.id)}
-            >
-              <View style={styles.eventDate}>
-                <Text style={styles.eventDateText}>{formatEventDate(event.eventDate)}</Text>
-              </View>
-              <View style={styles.eventDetails}>
-                <Text style={styles.eventTitle}>{event.name || 'Evento sem nome'}</Text>
-                <Text style={styles.eventTime}>{formatEventTime(event.eventDate)}</Text>
-              </View>
-              <Icon name="chevron-forward-outline" size={20} color="#666" />
-            </TouchableOpacity>
-          ))
-        ) : (
-          <Text style={styles.noEventsText}>Você não tem eventos confirmados.</Text>
-        )}
-      </ScrollView>
+      <Agenda
+        items={events}
+        renderItem={renderItem}
+        renderEmptyDate={() => <View style={styles.emptyDate}><Text>Nenhum evento</Text></View>}
+        rowHasChanged={(r1, r2) => r1.name !== r2.name}
+        showClosingKnob={true}
+        theme={{
+          agendaDayTextColor: '#007AFF',
+          agendaDayNumColor: '#007AFF',
+          agendaTodayColor: '#007AFF',
+          agendaKnobColor: '#007AFF',
+          selectedDayBackgroundColor: '#007AFF',
+          dotColor: '#007AFF',
+          todayTextColor: '#007AFF',
+        }}
+      />
 
       <TouchableOpacity 
         style={styles.addButton}
@@ -144,39 +184,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-  content: {
+  eventItem: {
+    backgroundColor: 'white',
     flex: 1,
-    padding: 16,
-  },
-  eventCard: {
+    borderRadius: 10,
+    padding: 10,
+    marginRight: 10,
+    marginTop: 17,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
   },
-  eventDate: {
+  eventDay: {
     width: 50,
     height: 50,
     borderRadius: 25,
     backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 15,
   },
-  eventDateText: {
-    color: '#FFF',
+  eventDayText: {
+    color: 'white',
+    fontSize: 18,
     fontWeight: 'bold',
-    fontSize: 12,
-    textAlign: 'center',
   },
-  eventDetails: {
+  eventContent: {
     flex: 1,
   },
   eventTitle: {
@@ -188,6 +220,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    marginTop: 8,
+  },
+  emptyDate: {
+    height: 15,
+    flex: 1,
+    paddingTop: 30
   },
   addButton: {
     position: 'absolute',
@@ -204,11 +245,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-  },
-  noEventsText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 20,
   },
 });

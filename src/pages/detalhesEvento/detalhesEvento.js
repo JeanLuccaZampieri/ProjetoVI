@@ -22,17 +22,15 @@ const EventDetailsScreen = () => {
       const eventDoc = await getDoc(eventRef);
       if (eventDoc.exists()) {
         const eventData = eventDoc.data();
-        // Garantir que todas as propriedades necessárias existam
-        setEvent({
-          ...eventData,
-          eventDate: eventData.eventDate || null,
-          budget: eventData.budget || 0,
-          items: eventData.items || [],
-          isPrivate: eventData.isPrivate || false,
-          attendees: eventData.attendees || [],
-          guests: eventData.guests || []
-        });
-        setIsAttending(eventData.attendees?.includes(auth.currentUser.uid) || false);
+        setEvent(eventData);
+        const currentUserUid = auth.currentUser.uid;
+        setIsAttending(eventData.attendees?.includes(currentUserUid) || false);
+        const isGuest = eventData.guests?.includes(currentUserUid) || false;
+        if (!isGuest) {
+          await updateDoc(eventRef, {
+            guests: arrayUnion(currentUserUid)
+          });
+        }
       } else {
         Alert.alert('Erro', 'Evento não encontrado');
         navigation.goBack();
@@ -83,7 +81,9 @@ const EventDetailsScreen = () => {
       
       <View style={styles.infoContainer}>
         <Icon name="calendar-outline" size={24} color="#666" style={styles.icon} />
-        <Text style={styles.infoText}>{new Date(event.eventDate?.toDate()).toLocaleDateString()}</Text>
+        <Text style={styles.infoText}>
+          {event.eventDate?.toDate().toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'})}
+        </Text>
       </View>
 
       <View style={styles.infoContainer}>
