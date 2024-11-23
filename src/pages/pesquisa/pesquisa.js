@@ -201,8 +201,8 @@ export default function SearchScreen() {
             )}
 
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.modalButton} onPress={resetFilters}>
-                <Text style={styles.modalButtonText}>Resetar</Text>
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#007AFF' }]} onPress={resetFilters}>
+                <Text style={styles.modalButtonText}>Retirar filtros</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalButton} onPress={() => setShowFilters(false)}>
                 <Text style={styles.modalButtonText}>Aplicar</Text>
@@ -386,12 +386,15 @@ const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 20,
   },
   modalButton: {
     backgroundColor: '#007AFF',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 4,
+    flex: 1,
+    marginHorizontal: 5,
   },
   modalButtonText: {
     color: '#FFF',

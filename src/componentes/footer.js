@@ -24,6 +24,10 @@ export default function Footer() {
         <Icon name="list-outline" size={24} color="#666" />
         <Text style={styles.navText}>Meus Eventos</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Admin')}>
+        <Icon name="settings-outline" size={24} color="#666" />
+        <Text style={styles.navText}>Admin</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -31,10 +35,11 @@ export default function Footer() {
 const styles = StyleSheet.create({
   navbar: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#FFF',
     paddingVertical: 8,
+    paddingHorizontal: 16,
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
   },
@@ -42,7 +47,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   navText: {
-    fontSize: 12,
+    fontSize: 10,
     marginTop: 4,
     color: '#666',
   },

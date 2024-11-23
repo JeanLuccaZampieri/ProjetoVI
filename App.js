@@ -14,6 +14,9 @@ import CreateEventScreen from './src/pages/cadastrarEvento/CadastrarEvento';
 import EventosCriados from './src/pages/eventosCriados/EventosCriados'
 import EditEventScreen from './src/pages/editarEventos/EditarEventos';
 import EventDetailsScreen from './src/pages/detalhesEvento/detalhesEvento';
+import AdmTela from './src/pages/admTela/admTela';
+import EventoAdm from './src/pages/eventoAdm/eventoAdm';
+import UsuarioAdm from './src/pages/usuarioAdm/usuarioAdm';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -36,6 +39,9 @@ export default function App() {
         <Stack.Screen name="EventosCriados" component={EventosCriados} />
         <Stack.Screen name="EditarEventos" component={EditEventScreen} />
         <Stack.Screen name="EventDetails" component={EventDetailsScreen} />
+        <Stack.Screen name="AdmTela" component={AdmTela} />
+        <Stack.Screen name="EventoAdm" component={EventoAdm} />
+        <Stack.Screen name="UsuarioAdm" component={UsuarioAdm} />
       </Stack.Navigator>
     </NavigationContainer>
   );
