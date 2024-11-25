@@ -1,23 +1,45 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Agenda } from 'react-native-calendars';
+import { Agenda, LocaleConfig } from 'react-native-calendars';
 import Footer from '../../componentes/footer';
 import { firestore, auth } from '../../firebaseConfig';
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+
+const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+LocaleConfig.locales['pt-br'] = {
+  monthNames: meses,
+  monthNamesShort: meses.map(mes => mes.slice(0, 3)),
+  dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
+  dayNamesShort: diasDaSemana,
+};
+LocaleConfig.defaultLocale = 'pt-br';
+
+const CustomDayHeader = ({ date }) => {
+  const dia = new Date(date).getDay();
+  return <Text style={styles.dayHeader}>{diasDaSemana[dia]}</Text>;
+};
+
+const CustomMonthHeader = ({ date }) => {
+  const mes = new Date(date).getMonth();
+  const ano = new Date(date).getFullYear();
+  return <Text style={styles.monthHeader}>{`${meses[mes]} ${ano}`}</Text>;
+};
 
 export default function AgendaScreen() {
   const [events, setEvents] = useState({});
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
-  const fetchConfirmedEvents = useCallback(async () => {
+  const buscarEventosConfirmados = useCallback(async () => {
     setLoading(true);
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) {
-        console.error('No user logged in');
+        console.error('Nenhum usuário logado');
         setLoading(false);
         return;
       }
@@ -49,7 +71,7 @@ export default function AgendaScreen() {
 
       setEvents(fetchedEvents);
     } catch (error) {
-      console.error('Error fetching confirmed events:', error);
+      console.error('Erro ao buscar eventos confirmados:', error);
     } finally {
       setLoading(false);
     }
@@ -57,34 +79,34 @@ export default function AgendaScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchConfirmedEvents();
-    }, [fetchConfirmedEvents])
+      buscarEventosConfirmados();
+    }, [buscarEventosConfirmados])
   );
 
-  const navigateToEventDetails = (eventId) => {
+  const navegarParaDetalhesDoEvento = (eventId) => {
     navigation.navigate('EventDetails', { eventId });
   };
 
-  const handleRating = async (eventId, rating) => {
+  const lidarComAvaliacao = async (eventId, rating) => {
     try {
       const eventRef = doc(firestore, 'events', eventId);
       await updateDoc(eventRef, { rating });
       Alert.alert('Sucesso', 'Avaliação salva com sucesso!');
-      fetchConfirmedEvents(); // Recarrega os eventos para atualizar a avaliação
+      buscarEventosConfirmados(); // Recarrega os eventos para atualizar a avaliação
     } catch (error) {
-      console.error('Error saving rating:', error);
+      console.error('Erro ao salvar avaliação:', error);
       Alert.alert('Erro', 'Não foi possível salvar a avaliação. Tente novamente.');
     }
   };
 
-  const renderItem = (item) => {
+  const renderizarItem = (item) => {
     const eventDate = new Date(item.date);
     const day = eventDate.getDate();
 
     return (
       <TouchableOpacity
         style={styles.eventItem}
-        onPress={() => navigateToEventDetails(item.id)}
+        onPress={() => navegarParaDetalhesDoEvento(item.id)}
       >
         <View style={styles.eventDay}>
           <Text style={styles.eventDayText}>{day}</Text>
@@ -97,7 +119,7 @@ export default function AgendaScreen() {
               {[1, 2, 3, 4, 5].map((star) => (
                 <TouchableOpacity
                   key={star}
-                  onPress={() => handleRating(item.id, star)}
+                  onPress={() => lidarComAvaliacao(item.id, star)}
                 >
                   <Icon
                     name={star <= item.rating ? 'star' : 'star-outline'}
@@ -132,10 +154,12 @@ export default function AgendaScreen() {
 
       <Agenda
         items={events}
-        renderItem={renderItem}
+        renderItem={renderizarItem}
         renderEmptyDate={() => <View style={styles.emptyDate}><Text>Nenhum evento</Text></View>}
         rowHasChanged={(r1, r2) => r1.name !== r2.name}
         showClosingKnob={true}
+        renderDay={(day, item) => <CustomDayHeader date={day?.timestamp} />}
+        renderHeader={(date) => <CustomMonthHeader date={date} />}
         theme={{
           agendaDayTextColor: '#007AFF',
           agendaDayNumColor: '#007AFF',
@@ -144,6 +168,14 @@ export default function AgendaScreen() {
           selectedDayBackgroundColor: '#007AFF',
           dotColor: '#007AFF',
           todayTextColor: '#007AFF',
+          'stylesheet.calendar.header': {
+            dayTextAtIndex0: {
+              color: 'red'
+            },
+            dayTextAtIndex6: {
+              color: 'blue'
+            }
+          }
         }}
       />
 
@@ -245,5 +277,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  dayHeader: {
+    textAlign: 'center',
+    color: '#333',
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  monthHeader: {
+    textAlign: 'center',
+    color: '#333',
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 10,
   },
 });
