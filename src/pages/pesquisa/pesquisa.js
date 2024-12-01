@@ -390,6 +390,8 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     backgroundColor: '#007AFF',
+    alignItems: 'center',
+    textAlign: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 4,

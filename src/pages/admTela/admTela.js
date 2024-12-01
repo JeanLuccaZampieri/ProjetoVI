@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Footer from '../../componentes/footer';
 
 export default function AdminDashboardScreen() {
   const navigation = useNavigation();
@@ -15,7 +16,7 @@ export default function AdminDashboardScreen() {
       <View style={styles.content}>
         <TouchableOpacity 
           style={styles.menuItem}
-          onPress={() => navigation.navigate('AdminUserManagement')}
+          onPress={() => navigation.navigate('UsuarioAdm')}
         >
           <Icon name="people-outline" size={40} color="#007AFF" />
           <Text style={styles.menuItemText}>Gerenciar Usuários</Text>
@@ -23,12 +24,13 @@ export default function AdminDashboardScreen() {
 
         <TouchableOpacity 
           style={styles.menuItem}
-          onPress={() => navigation.navigate('AdminEventManagement')}
+          onPress={() => navigation.navigate('EventoAdm')}
         >
           <Icon name="calendar-outline" size={40} color="#007AFF" />
           <Text style={styles.menuItemText}>Gerenciar Eventos</Text>
         </TouchableOpacity>
       </View>
+      <Footer />
     </View>
   );
 }
@@ -54,6 +56,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+    paddingBottom: 70,
   },
   menuItem: {
     width: '100%',

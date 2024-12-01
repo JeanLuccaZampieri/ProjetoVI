@@ -147,9 +147,6 @@ export default function AgendaScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Agenda</Text>
-        <TouchableOpacity>
-          <Icon name="calendar-outline" size={24} color="#333" />
-        </TouchableOpacity>
       </View>
 
       <Agenda
@@ -179,12 +176,7 @@ export default function AgendaScreen() {
         }}
       />
 
-      <TouchableOpacity 
-        style={styles.addButton}
-        onPress={() => navigation.navigate('CreateEvent')}
-      >
-        <Icon name="add" size={24} color="#FFF" />
-      </TouchableOpacity>
+
 
       <Footer />
     </View>

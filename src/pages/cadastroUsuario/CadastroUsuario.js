@@ -44,7 +44,8 @@ const SignUpScreen = () => {
           street,
           number
         },
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        tipo: 1  // Add this line
       });
 
       Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');

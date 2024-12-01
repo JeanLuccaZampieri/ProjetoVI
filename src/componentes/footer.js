@@ -1,10 +1,26 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { auth, firestore } from '../firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function Footer() {
   const navigation = useNavigation();
+  const [userType, setUserType] = useState(null);
+
+  useEffect(() => {
+    const fetchUserType = async () => {
+      if (auth.currentUser) {
+        const userDoc = await getDoc(doc(firestore, 'users', auth.currentUser.uid));
+        if (userDoc.exists()) {
+          setUserType(userDoc.data().tipo);
+        }
+      }
+    };
+
+    fetchUserType();
+  }, []);
 
   return (
     <View style={styles.navbar}>
@@ -24,10 +40,12 @@ export default function Footer() {
         <Icon name="list-outline" size={24} color="#666" />
         <Text style={styles.navText}>Meus Eventos</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Admin')}>
-        <Icon name="settings-outline" size={24} color="#666" />
-        <Text style={styles.navText}>Admin</Text>
-      </TouchableOpacity>
+      {userType === 2 && (
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('AdmTela')}>
+          <Icon name="settings-outline" size={24} color="#666" />
+          <Text style={styles.navText}>Admin</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

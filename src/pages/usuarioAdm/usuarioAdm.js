@@ -3,11 +3,12 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } 
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { firestore } from '../../firebaseConfig';
-import { collection, query, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, getDocs, doc, deleteDoc } from 'firebase/firestore';
 
 export default function AdminUserManagementScreen() {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [loading, setLoading] = useState(true);
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -15,6 +16,7 @@ export default function AdminUserManagementScreen() {
     }, []);
 
     const fetchUsers = async () => {
+        setLoading(true);
         try {
             const usersRef = collection(firestore, 'users');
             const q = query(usersRef);
@@ -27,6 +29,8 @@ export default function AdminUserManagementScreen() {
         } catch (error) {
             console.error('Error fetching users:', error);
             Alert.alert('Erro', 'Não foi possível carregar os usuários.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -81,12 +85,18 @@ export default function AdminUserManagementScreen() {
                     onChangeText={setSearchQuery}
                 />
             </View>
-            <FlatList
-                data={filteredUsers}
-                renderItem={renderUserItem}
-                keyExtractor={(item) => item.id}
-                style={styles.userList}
-            />
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <Text>Carregando usuários...</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={filteredUsers}
+                    renderItem={renderUserItem}
+                    keyExtractor={(item) => item.id}
+                    style={styles.userList}
+                />
+            )}
         </View>
     );
 }
@@ -156,5 +166,10 @@ const styles = StyleSheet.create({
     },
     deleteButton: {
         marginLeft: 16,
+    },  
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

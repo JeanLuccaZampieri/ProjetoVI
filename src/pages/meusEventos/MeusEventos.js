@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Footer from '../../componentes/footer';
 import { firestore, auth } from '../../firebaseConfig';
@@ -8,7 +8,9 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 export default function MyEventsScreen() {
   const [myEvents, setMyEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation();
 
   const fetchMyEvents = useCallback(async () => {
@@ -31,6 +33,7 @@ export default function MyEventsScreen() {
       }));
 
       setMyEvents(fetchedEvents);
+      setFilteredEvents(fetchedEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
@@ -41,8 +44,15 @@ export default function MyEventsScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchMyEvents();
-    }, [])
+    }, [fetchMyEvents])
   );
+
+  useEffect(() => {
+    const filtered = myEvents.filter(event =>
+      event.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredEvents(filtered);
+  }, [searchQuery, myEvents]);
 
   const navigateToEventDetails = (eventId) => {
     navigation.navigate('EventDetails', { eventId });
@@ -60,14 +70,21 @@ export default function MyEventsScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Meus Eventos</Text>
-        <TouchableOpacity>
-          <Icon name="options-outline" size={24} color="#333" />
-        </TouchableOpacity>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <Icon name="search-outline" size={20} color="#666" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar eventos"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
       </View>
 
       <ScrollView style={styles.content}>
-        {myEvents.length > 0 ? (
-          myEvents.map((event) => (
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event) => (
             <TouchableOpacity 
               key={event.id} 
               style={styles.eventCard}
@@ -88,16 +105,11 @@ export default function MyEventsScreen() {
             </TouchableOpacity>
           ))
         ) : (
-          <Text style={styles.noEventsText}>Você não tem eventos como convidado.</Text>
+          <Text style={styles.noEventsText}>
+            {searchQuery ? 'Nenhum evento encontrado.' : 'Você não tem eventos como convidado.'}
+          </Text>
         )}
       </ScrollView>
-
-      <TouchableOpacity 
-        style={styles.addButton}
-        onPress={() => navigation.navigate('CreateEvent')}
-      >
-        <Icon name="add" size={24} color="#FFF" />
-      </TouchableOpacity>
 
       <Footer />
     </View>
@@ -129,9 +141,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    margin: 16,
+    paddingHorizontal: 12,
+    height: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
   content: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
   },
   eventCard: {
     flexDirection: 'row',

@@ -9,7 +9,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 const EditEventScreen = () => {
   const [eventName, setEventName] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState(''); // Added category state
+  const [category, setCategory] = useState(''); 
   const [budget, setBudget] = useState('');
   const [items, setItems] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
@@ -18,7 +18,7 @@ const EditEventScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [entryFee, setEntryFee] = useState(''); // Added entryFee state
+  const [entryFee, setEntryFee] = useState(''); 
 
   const navigation = useNavigation();
   const route = useRoute();
@@ -71,7 +71,7 @@ const EditEventScreen = () => {
   };
 
   const handleUpdateEvent = async () => {
-    if (!eventName || !description || !budget || !date || !category) { // Added category validation
+    if (!eventName || !description || !budget || !date || !category) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios, incluindo a categoria.');
       return;
     }
@@ -81,9 +81,9 @@ const EditEventScreen = () => {
       await updateDoc(eventRef, {
         name: eventName,
         description,
-        category, // Added category to update
+        category,
         budget: parseFloat(budget),
-        entryFee: entryFee ? parseFloat(entryFee) : null, // Added entryFee
+        entryFee: entryFee ? parseFloat(entryFee) : null,
         items: items.split(',').map(item => item.trim()),
         isPrivate,
         guests: selectedGuests,
@@ -163,7 +163,7 @@ const EditEventScreen = () => {
         />
       </View>
 
-      <View style={styles.inputContainer}> a
+      <View style={styles.inputContainer}> 
         <Icon name="ticket-outline" size={24} color="#666" style={styles.inputIcon} />
         <TextInput
           style={styles.input}

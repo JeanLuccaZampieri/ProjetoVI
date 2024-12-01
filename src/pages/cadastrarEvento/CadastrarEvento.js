@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Switch, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Switch, FlatList, Alert, LogBox } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { firestore, auth } from '../../firebaseConfig';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import DateTimePicker from '@react-native-community/datetimepicker';
+
+// Ignore all log messages
+LogBox.ignoreAllLogs();
 
 const CreateEventScreen = () => {
   const [eventName, setEventName] = useState('');
@@ -17,8 +20,8 @@ const CreateEventScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [category, setCategory] = useState(''); // Added category state
-  const [entryFee, setEntryFee] = useState(''); // Added entryFee state
+  const [category, setCategory] = useState('');
+  const [entryFee, setEntryFee] = useState('');
 
   const navigation = useNavigation();
 
@@ -43,7 +46,7 @@ const CreateEventScreen = () => {
   };
 
   const handleCreateEvent = async () => {
-    if (!eventName || !description || !budget || !date || !category) { // Added category validation
+    if (!eventName || !description || !budget || !date || !category) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios, incluindo a categoria.');
       return;
     }
@@ -52,9 +55,9 @@ const CreateEventScreen = () => {
       const eventData = {
         name: eventName,
         description,
-        category, // Added category to eventData
+        category,
         budget: parseFloat(budget),
-        entryFee: entryFee ? parseFloat(entryFee) : null, // Added entryFee to eventData
+        entryFee: entryFee ? parseFloat(entryFee) : null,
         items: items.split(',').map(item => item.trim()),
         isPrivate,
         guests: selectedGuests,

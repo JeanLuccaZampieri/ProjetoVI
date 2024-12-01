@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Footer from '../../componentes/footer';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { firestore, auth } from '../../firebaseConfig';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, doc, getDoc } from 'firebase/firestore';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -28,32 +28,31 @@ export default function HomeScreen() {
         eventsRef,
         where('attendees', 'array-contains', currentUser.uid),
         where('eventDate', '>=', now),
+        orderBy('eventDate', 'asc'),
         limit(3)
       );
 
       const querySnapshot = await getDocs(q);
-      const fetchedEvents = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          eventDate: data.eventDate ? data.eventDate.toDate() : null
-        };
-      });
+      const fetchedEvents = querySnapshot.docs
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            eventDate: data.eventDate ? data.eventDate.toDate() : null
+          };
+        })
+        .filter(event => event.eventDate !== null);
 
       setUpcomingEvents(fetchedEvents);
 
       // Fetch user name
-      const userQuery = query(collection(firestore, 'users'), where('uid', '==', currentUser.uid));
-      const userSnapshot = await getDocs(userQuery);
-      if (!userSnapshot.empty) {
-        setUserName(userSnapshot.docs[0].data().name || 'Usuário');
+      const userDoc = await getDoc(doc(firestore, 'users', currentUser.uid));
+      if (userDoc.exists()) {
+        setUserName(userDoc.data().name || 'Usuário');
       }
     } catch (error) {
       console.error('Error fetching upcoming events:', error);
-      if (error.code === 'failed-precondition') {
-        console.error('This query requires an index. Please create it in the Firebase Console.');
-      }
     } finally {
       setLoading(false);
     }
@@ -66,7 +65,6 @@ export default function HomeScreen() {
   );
 
   const formatEventDate = (date) => {
-    if (!date) return 'Data não definida';
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
   };
 
@@ -81,7 +79,7 @@ export default function HomeScreen() {
 
       <ScrollView style={styles.content}>
         <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeText}>Bem-vindo de volta, {userName}!</Text>
+          <Text style={styles.welcomeText}>Bem-vindo de volta, {userName}!</Text> 
           <Text style={styles.subText}>Vamos gerenciar seus eventos</Text>
         </View>
 
@@ -115,12 +113,20 @@ export default function HomeScreen() {
               <Icon name="add-circle-outline" size={24} color="#007AFF" />
               <Text style={styles.quickActionText}>Criar Evento</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigation.navigate('Search')}>
+            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigation.navigate('Pesquisar')}>
               <Icon name="search-outline" size={24} color="#007AFF" />
               <Text style={styles.quickActionText}>Buscar Eventos</Text>
             </TouchableOpacity>
           </View>
         </View>
+
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Sobre Nós</Text>
+          <Text style={styles.aboutUsText}>
+            A Eventive é uma plataforma inovadora de gerenciamento de eventos, projetada para simplificar a organização e participação em eventos de todos os tipos. Nossa missão é conectar pessoas através de experiências memoráveis, fornecendo ferramentas intuitivas para criação, descoberta e gerenciamento de eventos. Com a Eventive, você pode facilmente criar, compartilhar e participar de eventos, tudo em um só lugar.
+          </Text>
+        </View>
+
       </ScrollView>
 
       <Footer />
@@ -220,5 +226,10 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginTop: 20,
+  },
+  aboutUsText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
 });

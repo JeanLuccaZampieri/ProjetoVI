@@ -40,7 +40,7 @@ const MyEventsScreen = () => {
         isActive: false
       });
       Alert.alert('Sucesso', 'Evento desativado com sucesso!');
-      fetchEvents(); // Recarrega a lista de eventos
+      fetchEvents();
     } catch (error) {
       console.error('Error deactivating event:', error);
       Alert.alert('Erro', 'Não foi possível desativar o evento.');
@@ -51,6 +51,10 @@ const MyEventsScreen = () => {
     navigation.navigate('EditarEventos', { eventId });
   };
 
+  const handleViewAttendees = (eventId) => {
+    navigation.navigate('AttendeeList', { eventId });
+  };
+
   const renderEventItem = ({ item }) => (
     <View style={styles.eventItem}>
       <View style={styles.eventInfo}>
@@ -58,6 +62,9 @@ const MyEventsScreen = () => {
         <Text style={styles.eventDate}>{new Date(item.createdAt.toDate()).toLocaleDateString()}</Text>
       </View>
       <View style={styles.eventActions}>
+        <TouchableOpacity onPress={() => handleViewAttendees(item.id)} style={styles.actionButton}>
+          <Icon name="people-outline" size={24} color="#007AFF" />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => handleEditEvent(item.id)} style={styles.actionButton}>
           <Icon name="create-outline" size={24} color="#007AFF" />
         </TouchableOpacity>
