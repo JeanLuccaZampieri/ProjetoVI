@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Switch } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { auth, firestore } from '../../firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import TermsOfUseModal from '../../componentes/termos';
 
 const SignUpScreen = () => {
   const [name, setName] = useState('');
@@ -17,21 +18,31 @@ const SignUpScreen = () => {
   const [neighborhood, setNeighborhood] = useState('');
   const [street, setStreet] = useState('');
   const [number, setNumber] = useState('');
+  const [lgpdAccepted, setLgpdAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const navigation = useNavigation();
 
-  const handleSignUp = async () => {
+  const handleSignUp = () => {
     if (!name || !email || !password || !cpf || !birthDate || !cep || !city || !neighborhood || !street || !number) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos');
       return;
     }
 
+    if (!lgpdAccepted) {
+      Alert.alert('Erro', 'Por favor, aceite os termos de LGPD para continuar');
+      return;
+    }
+
+    setShowTermsModal(true);
+  };
+
+  const handleAcceptTerms = async () => {
+    setShowTermsModal(false);
     try {
-      // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Add user details to Firestore
       await setDoc(doc(firestore, 'users', user.uid), {
         name,
         email,
@@ -45,7 +56,9 @@ const SignUpScreen = () => {
           number
         },
         createdAt: serverTimestamp(),
-        tipo: 1  // Add this line
+        tipo: 1,
+        lgpdAccepted: true,
+        termsAccepted: true
       });
 
       Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');
@@ -54,6 +67,11 @@ const SignUpScreen = () => {
       console.error('Error during sign up:', error);
       Alert.alert('Erro', error.message);
     }
+  };
+
+  const handleDeclineTerms = () => {
+    setShowTermsModal(false);
+    Alert.alert('Termos Recusados', 'Você precisa aceitar os termos para se cadastrar.');
   };
 
   const maskBirthDate = (text) => {
@@ -188,6 +206,18 @@ const SignUpScreen = () => {
         />
       </View>
 
+      <View style={styles.lgpdContainer}>
+        <Switch
+          value={lgpdAccepted}
+          onValueChange={setLgpdAccepted}
+          trackColor={{ false: "#767577", true: "#81b0ff" }}
+          thumbColor={lgpdAccepted ? "#f5dd4b" : "#f4f3f4"}
+        />
+        <Text style={styles.lgpdText}>
+          Eu li e aceito os termos da Lei Geral de Proteção de Dados (LGPD). Entendo que meus dados pessoais serão coletados e processados de acordo com a política de privacidade da empresa.
+        </Text>
+      </View>
+
       <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
         <Text style={styles.signUpButtonText}>Cadastrar</Text>
       </TouchableOpacity>
@@ -195,6 +225,12 @@ const SignUpScreen = () => {
       <TouchableOpacity style={styles.loginLink} onPress={() => navigation.navigate('Login')}>
         <Text style={styles.loginLinkText}>Já tem uma conta? Faça login</Text>
       </TouchableOpacity>
+
+      <TermsOfUseModal
+        visible={showTermsModal}
+        onAccept={handleAcceptTerms}
+        onDecline={handleDeclineTerms}
+      />
     </ScrollView>
   );
 };
@@ -228,6 +264,18 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 50,
+  },
+  lgpdContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+    paddingHorizontal: 10,
+  },
+  lgpdText: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 12,
+    color: '#666',
   },
   signUpButton: {
     backgroundColor: '#007AFF',

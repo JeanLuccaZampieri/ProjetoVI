@@ -20,6 +20,7 @@ import UsuarioAdm from './src/pages/usuarioAdm/usuarioAdm';
 import AdmEditarEvento from './src/pages/AdmEditarEvento/AdmEditarEvento';
 import EditUserScreen from './src/pages/AdmEditarUsuario/AdmEditarUsuario';
 import AttendeeListScreen from './src/pages/listaConvidados/ListaConvidados';
+import Termos from './src/componentes/termos';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -50,6 +51,7 @@ export default function App() {
             <Stack.Screen name="UsuarioAdm" component={UsuarioAdm} />
             <Stack.Screen name="AdmEditarEvento" component={AdmEditarEvento} />
             <Stack.Screen name="EditUser" component={EditUserScreen} />
+            <Stack.Screen name="Termos" component={Termos} />
             <Stack.Screen
               name="AttendeeList"
               component={AttendeeListScreen}

@@ -22,6 +22,13 @@ const CreateEventScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [category, setCategory] = useState('');
   const [entryFee, setEntryFee] = useState('');
+  
+  // New address fields
+  const [cep, setCep] = useState('');
+  const [city, setCity] = useState('');
+  const [street, setStreet] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
+  const [number, setNumber] = useState('');
 
   const navigation = useNavigation();
 
@@ -46,8 +53,8 @@ const CreateEventScreen = () => {
   };
 
   const handleCreateEvent = async () => {
-    if (!eventName || !description || !budget || !date || !category) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios, incluindo a categoria.');
+    if (!eventName || !description || !budget || !date || !category || !cep || !city || !street || !neighborhood || !number) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios, incluindo o endereço completo.');
       return;
     }
 
@@ -60,11 +67,19 @@ const CreateEventScreen = () => {
         entryFee: entryFee ? parseFloat(entryFee) : null,
         items: items.split(',').map(item => item.trim()),
         isPrivate,
-        guests: selectedGuests,
+        guests: selectedGuests.map(guest => guest.id),
+        attendees: [],
         createdBy: auth.currentUser.uid,
         createdAt: new Date(),
         eventDate: date,
-        isActive: true
+        isActive: true,
+        address: {
+          cep,
+          city,
+          street,
+          neighborhood,
+          number
+        }
       };
 
       await addDoc(collection(firestore, 'events'), eventData);
@@ -93,6 +108,29 @@ const CreateEventScreen = () => {
     const currentDate = selectedDate || date;
     setShowDatePicker(false);
     setDate(currentDate);
+  };
+
+  const searchCep = async () => {
+    if (cep.length !== 8) {
+      Alert.alert('Erro', 'Por favor, insira um CEP válido com 8 dígitos.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        Alert.alert('Erro', 'CEP não encontrado. Por favor, verifique o número e tente novamente.');
+      } else {
+        setCity(data.localidade);
+        setStreet(data.logradouro);
+        setNeighborhood(data.bairro);
+      }
+    } catch (error) {
+      console.error('Error fetching CEP:', error);
+      Alert.alert('Erro', 'Não foi possível buscar o CEP. Por favor, tente novamente mais tarde.');
+    }
   };
 
   return (
@@ -175,6 +213,62 @@ const CreateEventScreen = () => {
           placeholder="Itens do evento (separados por vírgula)"
           value={items}
           onChangeText={setItems}
+        />
+      </View>
+
+      {/* New address fields */}
+      <View style={styles.inputContainer}>
+        <Icon name="map-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="CEP"
+          value={cep}
+          onChangeText={setCep}
+          keyboardType="numeric"
+        />
+        <TouchableOpacity onPress={searchCep}>
+          <Icon name="search-outline" size={24} color="#666" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Icon name="business-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Cidade"
+          value={city}
+          onChangeText={setCity}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Icon name="home-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Rua"
+          value={street}
+          onChangeText={setStreet}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Icon name="map-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Bairro"
+          value={neighborhood}
+          onChangeText={setNeighborhood}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Icon name="home-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Número"
+          value={number}
+          onChangeText={setNumber}
+          keyboardType="numeric"
         />
       </View>
 

@@ -94,8 +94,31 @@ const EventDetailsScreen = () => {
       </View>
 
       <View style={styles.infoContainer}>
+        <Icon name="ticket-outline" size={24} color="#666" style={styles.icon} />
+        <Text style={styles.infoText}>
+          Valor da entrada: {event.entryFee ? `R$ ${event.entryFee.toFixed(2)}` : 'Gratuito'}
+        </Text>
+      </View>
+
+      <View style={styles.infoContainer}>
         <Icon name="lock-closed-outline" size={24} color="#666" style={styles.icon} />
         <Text style={styles.infoText}>{event.isPrivate ? 'Evento Privado' : 'Evento Público'}</Text>
+      </View>
+
+      <Text style={styles.sectionTitle}>Endereço</Text>
+      <View style={styles.addressContainer}>
+        <View style={styles.infoContainer}>
+          <Icon name="map-outline" size={24} color="#666" style={styles.icon} />
+          <Text style={styles.infoText}>{event.address?.street}, {event.address?.number}</Text>
+        </View>
+        <View style={styles.infoContainer}>
+          <Icon name="business-outline" size={24} color="#666" style={styles.icon} />
+          <Text style={styles.infoText}>{event.address?.neighborhood}, {event.address?.city}</Text>
+        </View>
+        <View style={styles.infoContainer}>
+          <Icon name="mail-outline" size={24} color="#666" style={styles.icon} />
+          <Text style={styles.infoText}>CEP: {event.address?.cep}</Text>
+        </View>
       </View>
 
       <Text style={styles.sectionTitle}>Descrição</Text>
@@ -187,6 +210,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  addressContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 5,
+    padding: 10,
     marginBottom: 20,
   },
 });

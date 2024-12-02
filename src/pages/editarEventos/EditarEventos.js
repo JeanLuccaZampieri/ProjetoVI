@@ -9,7 +9,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 const EditEventScreen = () => {
   const [eventName, setEventName] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState(''); 
+  const [category, setCategory] = useState('');
   const [budget, setBudget] = useState('');
   const [items, setItems] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
@@ -18,7 +18,14 @@ const EditEventScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [entryFee, setEntryFee] = useState(''); 
+  const [entryFee, setEntryFee] = useState('');
+
+  // New address fields
+  const [cep, setCep] = useState('');
+  const [city, setCity] = useState('');
+  const [street, setStreet] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
+  const [number, setNumber] = useState('');
 
   const navigation = useNavigation();
   const route = useRoute();
@@ -37,13 +44,19 @@ const EditEventScreen = () => {
         const eventData = eventDoc.data();
         setEventName(eventData.name);
         setDescription(eventData.description);
-        setCategory(eventData.category || ''); // Set category
+        setCategory(eventData.category || '');
         setBudget(eventData.budget.toString());
         setItems(eventData.items.join(', '));
         setIsPrivate(eventData.isPrivate);
         setSelectedGuests(eventData.guests || []);
         setDate(eventData.eventDate ? eventData.eventDate.toDate() : new Date());
-        setEntryFee(eventData.entryFee ? eventData.entryFee.toString() : ''); // Set entryFee
+        setEntryFee(eventData.entryFee ? eventData.entryFee.toString() : '');
+        // Set address fields
+        setCep(eventData.address?.cep || '');
+        setCity(eventData.address?.city || '');
+        setStreet(eventData.address?.street || '');
+        setNeighborhood(eventData.address?.neighborhood || '');
+        setNumber(eventData.address?.number || '');
       } else {
         Alert.alert('Erro', 'Evento não encontrado');
         navigation.goBack();
@@ -71,8 +84,8 @@ const EditEventScreen = () => {
   };
 
   const handleUpdateEvent = async () => {
-    if (!eventName || !description || !budget || !date || !category) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios, incluindo a categoria.');
+    if (!eventName || !description || !budget || !date || !category || !cep || !city || !street || !neighborhood || !number) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios, incluindo o endereço completo.');
       return;
     }
 
@@ -88,7 +101,14 @@ const EditEventScreen = () => {
         isPrivate,
         guests: selectedGuests,
         eventDate: date,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        address: {
+          cep,
+          city,
+          street,
+          neighborhood,
+          number
+        }
       });
       Alert.alert('Sucesso', 'Evento atualizado com sucesso!');
       navigation.goBack();
@@ -115,6 +135,29 @@ const EditEventScreen = () => {
     const currentDate = selectedDate || date;
     setShowDatePicker(false);
     setDate(currentDate);
+  };
+
+  const searchCep = async () => {
+    if (cep.length !== 8) {
+      Alert.alert('Erro', 'Por favor, insira um CEP válido com 8 dígitos.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        Alert.alert('Erro', 'CEP não encontrado. Por favor, verifique o número e tente novamente.');
+      } else {
+        setCity(data.localidade);
+        setStreet(data.logradouro);
+        setNeighborhood(data.bairro);
+      }
+    } catch (error) {
+      console.error('Error fetching CEP:', error);
+      Alert.alert('Erro', 'Não foi possível buscar o CEP. Por favor, tente novamente mais tarde.');
+    }
   };
 
   return (
@@ -163,7 +206,7 @@ const EditEventScreen = () => {
         />
       </View>
 
-      <View style={styles.inputContainer}> 
+      <View style={styles.inputContainer}>
         <Icon name="ticket-outline" size={24} color="#666" style={styles.inputIcon} />
         <TextInput
           style={styles.input}
@@ -197,6 +240,62 @@ const EditEventScreen = () => {
           placeholder="Itens do evento (separados por vírgula)"
           value={items}
           onChangeText={setItems}
+        />
+      </View>
+
+      {/* New address fields */}
+      <View style={styles.inputContainer}>
+        <Icon name="map-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="CEP"
+          value={cep}
+          onChangeText={setCep}
+          keyboardType="numeric"
+        />
+        <TouchableOpacity onPress={searchCep}>
+          <Icon name="search-outline" size={24} color="#666" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Icon name="business-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Cidade"
+          value={city}
+          onChangeText={setCity}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Icon name="home-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Rua"
+          value={street}
+          onChangeText={setStreet}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Icon name="map-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Bairro"
+          value={neighborhood}
+          onChangeText={setNeighborhood}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Icon name="home-outline" size={24} color="#666" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Número"
+          value={number}
+          onChangeText={setNumber}
+          keyboardType="numeric"
         />
       </View>
 

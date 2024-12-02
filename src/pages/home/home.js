@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Footer from '../../componentes/footer';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { firestore, auth } from '../../firebaseConfig';
 import { collection, query, where, getDocs, orderBy, limit, doc, getDoc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -68,13 +69,24 @@ export default function HomeScreen() {
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.navigate('Login');
+    } catch (error) {
+      console.error('Error signing out: ', error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity style={styles.iconButton} onPress={handleLogout}>
+            <Icon name="log-out-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.headerTitle}>Eventive</Text>
-        <TouchableOpacity>
-          <Icon name="notifications-outline" size={24} color="#333" />
-        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
@@ -111,7 +123,7 @@ export default function HomeScreen() {
           <View style={styles.quickActions}>
             <TouchableOpacity style={styles.quickActionButton} onPress={() => navigation.navigate('EventosCriados')}>
               <Icon name="add-circle-outline" size={24} color="#007AFF" />
-              <Text style={styles.quickActionText}>Criar Evento</Text>
+              <Text style={styles.quickActionText}>Gerenciar Eventos</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionButton} onPress={() => navigation.navigate('Pesquisar')}>
               <Icon name="search-outline" size={24} color="#007AFF" />
@@ -123,7 +135,7 @@ export default function HomeScreen() {
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Sobre Nós</Text>
           <Text style={styles.aboutUsText}>
-            A Eventive é uma plataforma inovadora de gerenciamento de eventos, projetada para simplificar a organização e participação em eventos de todos os tipos. Nossa missão é conectar pessoas através de experiências memoráveis, fornecendo ferramentas intuitivas para criação, descoberta e gerenciamento de eventos. Com a Eventive, você pode facilmente criar, compartilhar e participar de eventos, tudo em um só lugar.
+            A Eventive é uma plataforma inovadora de gerenciamento de eventos, projetada para simplificar a organização e participação em eventos de todos os tipos. Nossa missão é conectar pessoas através de experiências memoráveis, fornecendo ferramentas intuitivas para criação, descoberta e gerenciamento de eventos. Com a Eventive, você pode facilmente criar e participar de eventos, tudo em um só lugar.
           </Text>
         </View>
 
@@ -148,10 +160,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
+  logo: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
+  },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconButton: {
+    marginLeft: 16,
   },
   content: {
     flex: 1,

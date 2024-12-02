@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Switch } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Footer from '../../componentes/footer';
-import { firestore } from '../../firebaseConfig';
+import { firestore, auth } from '../../firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -33,13 +33,18 @@ export default function SearchScreen() {
     try {
       const eventsRef = collection(firestore, 'events');
       const q = query(eventsRef, where('isActive', '==', true));
+      const currentUserUid = auth.currentUser.uid;
       
       const querySnapshot = await getDocs(q);
       const fetchedEvents = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         eventDate: doc.data().eventDate ? doc.data().eventDate.toDate() : null
-      }));
+      })).filter(event => {
+        // Mostrar eventos públicos ou eventos privados onde o usuário é convidado
+        return !event.isPrivate || (event.isPrivate && event.guests && event.guests.includes(currentUserUid));
+      });
+      
       setEvents(fetchedEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -231,6 +236,12 @@ export default function SearchScreen() {
                   Entrada: R$ {parseFloat(event.entryFee).toFixed(2)}
                 </Text>
               )}
+              {event.isPrivate && (
+                <View style={styles.privateTag}>
+                  <Icon name="lock-closed" size={12} color="#FFF" style={styles.privateIcon} />
+                  <Text style={styles.privateText}>Privado</Text>
+                </View>
+              )}
             </View>
             <View style={styles.eventCategory}>
               <Text style={styles.eventCategoryText}>{event.category || 'Sem categoria'}</Text>
@@ -390,8 +401,6 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     backgroundColor: '#007AFF',
-    alignItems: 'center',
-    textAlign: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 4,
@@ -400,6 +409,24 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: '#FFF',
+    fontWeight: 'bold',
+  },
+  privateTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+  },
+  privateIcon: {
+    marginRight: 4,
+  },
+  privateText: {
+    color: '#FFF',
+    fontSize: 12,
     fontWeight: 'bold',
   },
 });
