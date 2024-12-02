@@ -81,12 +81,13 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+      <Text style={styles.headerTitle}>Eventive</Text>
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconButton} onPress={handleLogout}>
             <Icon name="log-out-outline" size={24} color="#333" />
           </TouchableOpacity>
         </View>
-        <Text style={styles.headerTitle}>Eventive</Text>
+        
       </View>
 
       <ScrollView style={styles.content}>

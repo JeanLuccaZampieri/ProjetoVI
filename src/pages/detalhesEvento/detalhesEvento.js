@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'rea
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { firestore, auth } from '../../firebaseConfig';
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, setDoc } from 'firebase/firestore';
 
 const EventDetailsScreen = () => {
   const [event, setEvent] = useState(null);
   const [isAttending, setIsAttending] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+  const [canRate, setCanRate] = useState(false);
   const navigation = useNavigation();
   const route = useRoute();
   const { eventId } = route.params;
@@ -30,6 +32,18 @@ const EventDetailsScreen = () => {
           await updateDoc(eventRef, {
             guests: arrayUnion(currentUserUid)
           });
+        }
+        
+        // Verificar se o evento já ocorreu
+        const eventDate = eventData.eventDate.toDate();
+        const now = new Date();
+        setCanRate(eventDate < now);
+
+        // Buscar a avaliação do usuário para este evento
+        const userRatingRef = doc(firestore, 'eventRatings', `${eventId}_${currentUserUid}`);
+        const userRatingDoc = await getDoc(userRatingRef);
+        if (userRatingDoc.exists()) {
+          setUserRating(userRatingDoc.data().rating);
         }
       } else {
         Alert.alert('Erro', 'Evento não encontrado');
@@ -67,6 +81,28 @@ const EventDetailsScreen = () => {
     }
   };
 
+  const handleRating = async (rating) => {
+    if (!canRate) {
+      Alert.alert('Aviso', 'Você só pode avaliar o evento após ele ter ocorrido.');
+      return;
+    }
+
+    try {
+      const currentUserUid = auth.currentUser.uid;
+      const userRatingRef = doc(firestore, 'eventRatings', `${eventId}_${currentUserUid}`);
+      await setDoc(userRatingRef, {
+        eventId,
+        userId: currentUserUid,
+        rating
+      });
+      setUserRating(rating);
+      Alert.alert('Sucesso', 'Sua avaliação foi salva com sucesso!');
+    } catch (error) {
+      console.error('Error saving rating:', error);
+      Alert.alert('Erro', 'Não foi possível salvar sua avaliação. Tente novamente.');
+    }
+  };
+
   if (!event) {
     return (
       <View style={styles.container}>
@@ -76,7 +112,7 @@ const EventDetailsScreen = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Text style={styles.title}>{event.name}</Text>
       
       <View style={styles.infoContainer}>
@@ -146,6 +182,27 @@ const EventDetailsScreen = () => {
           {isAttending ? 'Cancelar Presença' : 'Confirmar Presença'}
         </Text>
       </TouchableOpacity>
+
+      {canRate && (
+        <>
+          <Text style={styles.sectionTitle}>Sua Avaliação</Text>
+          <View style={styles.ratingContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity
+                key={star}
+                onPress={() => handleRating(star)}
+              >
+                <Icon
+                  name={star <= userRating ? 'star' : 'star-outline'}
+                  size={30}
+                  color="#FFD700"
+                  style={styles.starIcon}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 };
@@ -154,7 +211,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  contentContainer: {
     padding: 20,
+    paddingBottom: 40, // Adiciona um espaço extra no final para garantir que todo o conteúdo seja scrollável
   },
   title: {
     fontSize: 24,
@@ -217,6 +277,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 20,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  starIcon: {
+    marginHorizontal: 5,
   },
 });
 

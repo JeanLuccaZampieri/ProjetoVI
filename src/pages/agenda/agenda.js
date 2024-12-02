@@ -63,8 +63,7 @@ export default function AgendaScreen() {
             name: eventData.name || 'Evento sem nome',
             time: eventData.eventDate.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             date: date,
-            isPast: eventData.eventDate.toDate() < now,
-            rating: eventData.rating || 0
+            isPast: eventData.eventDate.toDate() < now
           });
         }
       });
@@ -87,17 +86,6 @@ export default function AgendaScreen() {
     navigation.navigate('EventDetails', { eventId });
   };
 
-  const lidarComAvaliacao = async (eventId, rating) => {
-    try {
-      const eventRef = doc(firestore, 'events', eventId);
-      await updateDoc(eventRef, { rating });
-      Alert.alert('Sucesso', 'Avaliação salva com sucesso!');
-      buscarEventosConfirmados(); // Recarrega os eventos para atualizar a avaliação
-    } catch (error) {
-      console.error('Erro ao salvar avaliação:', error);
-      Alert.alert('Erro', 'Não foi possível salvar a avaliação. Tente novamente.');
-    }
-  };
 
   const renderizarItem = (item) => {
     const eventDate = new Date(item.date);
@@ -114,22 +102,6 @@ export default function AgendaScreen() {
         <View style={styles.eventContent}>
           <Text style={styles.eventTitle}>{item.name}</Text>
           <Text style={styles.eventTime}>{item.time}</Text>
-          {item.isPast && (
-            <View style={styles.ratingContainer}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity
-                  key={star}
-                  onPress={() => lidarComAvaliacao(item.id, star)}
-                >
-                  <Icon
-                    name={star <= item.rating ? 'star' : 'star-outline'}
-                    size={20}
-                    color="#FFD700"
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
         </View>
       </TouchableOpacity>
     );
@@ -147,6 +119,9 @@ export default function AgendaScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Agenda</Text>
+        <TouchableOpacity>
+          <Icon name="calendar-outline" size={24} color="#333" />
+        </TouchableOpacity>
       </View>
 
       <Agenda
@@ -176,7 +151,12 @@ export default function AgendaScreen() {
         }}
       />
 
-
+      <TouchableOpacity 
+        style={styles.addButton}
+        onPress={() => navigation.navigate('CreateEvent')}
+      >
+        <Icon name="add" size={24} color="#FFF" />
+      </TouchableOpacity>
 
       <Footer />
     </View>
@@ -244,10 +224,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    marginTop: 8,
   },
   emptyDate: {
     height: 15,

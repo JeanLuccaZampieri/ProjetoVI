@@ -134,7 +134,7 @@ const CreateEventScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Text style={styles.title}>Criar Novo Evento</Text>
 
       <View style={styles.inputContainer}>
@@ -324,6 +324,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     padding: 20,
   },
+  contentContainer: {
+    paddingBottom: 40,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -403,6 +406,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     marginTop: 20,
+    marginBottom: 20,
+    width: '100%',
   },
   createButtonText: {
     color: '#FFFFFF',

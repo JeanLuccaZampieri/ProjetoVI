@@ -94,6 +94,29 @@ const SignUpScreen = () => {
     setBirthDate(formatted);
   };
 
+  const searchCep = async () => {
+    if (cep.length !== 8) {
+      Alert.alert('Erro', 'Por favor, insira um CEP válido com 8 dígitos.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        Alert.alert('Erro', 'CEP não encontrado. Por favor, verifique o número e tente novamente.');
+      } else {
+        setCity(data.localidade);
+        setNeighborhood(data.bairro);
+        setStreet(data.logradouro);
+      }
+    } catch (error) {
+      console.error('Error fetching CEP:', error);
+      Alert.alert('Erro', 'Não foi possível buscar o CEP. Por favor, tente novamente mais tarde.');
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Cadastro</Text>
@@ -163,6 +186,9 @@ const SignUpScreen = () => {
           onChangeText={setCep}
           keyboardType="numeric"
         />
+        <TouchableOpacity onPress={searchCep}>
+          <Icon name="search-outline" size={24} color="#666" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.inputContainer}>

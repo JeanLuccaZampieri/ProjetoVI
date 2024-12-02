@@ -351,6 +351,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     padding: 20,
   },
+  contentContainer: {
+    paddingBottom: 40,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -430,6 +433,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     marginTop: 20,
+    marginBottom: 20,
+    width: '100%',
   },
   updateButtonText: {
     color: '#FFFFFF',
